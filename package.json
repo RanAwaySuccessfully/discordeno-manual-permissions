@@ -1,0 +1,10 @@
+{
+  "name": "discordeno-manual-permissions",
+  "version": "1.0.0",
+  "description": "discordeno permission helpers.",
+  "type": "module",
+  "main": "permissions.js",
+  "private": false,
+  "author": "RanAwaySuccessfully",
+  "license": "MIT"
+}
