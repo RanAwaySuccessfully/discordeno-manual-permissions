@@ -1,7 +1,7 @@
 type Guild = {
     id: bigint,
     roles: Map<bigint,Role>,
-    ownerId: string,
+    ownerId: bigint,
 };
 
 type Member = {
@@ -11,6 +11,7 @@ type Member = {
 
 type Role = {
     id: bigint,
+    position: number,
     permissions: {
         bitfield: bigint,
     },
@@ -24,4 +25,7 @@ type Channel = {
 declare module 'discordeno-manual-permissions' {
     export function getMemberPermissions(guild: Guild, member: Member, channel?: Channel): bigint
     export function getRolePermissions(guild: Guild, role: Role, channel: Channel): bigint
+    export function highestRole(guild: Guild, member: Member): Role
+    export function higherRolePosition(role: Role, otherRole: Role): boolean
+    export function isHigherPosition(guild: Guild, member: Member, compareRole: Role): boolean
 }

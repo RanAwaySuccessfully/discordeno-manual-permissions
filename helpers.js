@@ -1,3 +1,12 @@
+let calculateBits;
+
+try {
+  const util = await import("@discordeno/utils");
+  calculateBits = util.calculateBits;
+} catch (error) {
+    // should be fine...
+}
+
 /** Calculates the permissions this member has in the given guild */
 export const calculateBasePermissions = (guild, member) => {
     if (!guild || !member) return 0n;
@@ -31,21 +40,20 @@ export const calculateCachedChannelOverwrites = (guild, channel, member, role) =
         role.permissions.bitfield;
 
     // First calculate @everyone overwrites since these have the lowest priority
-    const overwriteEveryone = channel.internalOverwrites?.find((overwrite) => {
-        const [_, id] = separateOverwrites(overwrite);
-
-        return id === channel.guildId;
+    const overwriteEveryone = channel.permissionOverwrites?.find((overwrite) => {
+        return overwrite.id === channel.guildId;
     });
 
     if (overwriteEveryone) {
-        const [_type, _id, allow, deny] = separateOverwrites(overwriteEveryone);
+        let deny = getPermissionBits(overwriteEveryone.deny);
+        let allow = getPermissionBits(overwriteEveryone.allow);
 
         // First remove denied permissions since denied < allowed
         permissions &= ~deny;
         permissions |= allow;
     }
 
-    const overwrites = channel.internalOverwrites;
+    const overwrites = channel.permissionOverwrites;
 
     // In order to calculate the role permissions correctly we need to temporarily save the allowed and denied permissions
     let allow = 0n;
@@ -60,9 +68,10 @@ export const calculateCachedChannelOverwrites = (guild, channel, member, role) =
 
     // Second calculate members role overwrites since these have middle priority
     for (const overwrite of overwrites || []) {
-        const [_type, id, allowBits, denyBits] = separateOverwrites(overwrite);
+        if (!memberRoles.includes(overwrite.id)) continue;
 
-        if (!memberRoles.includes(id)) continue;
+        let denyBits = getPermissionBits(overwrite.deny);
+        let allowBits = getPermissionBits(overwrite.allow);
 
         deny |= denyBits;
         allow |= allowBits;
@@ -74,13 +83,12 @@ export const calculateCachedChannelOverwrites = (guild, channel, member, role) =
 
     // Third calculate member specific overwrites since these have the highest priority
     const overwriteCachedMember = overwrites?.find((overwrite) => {
-        const [_, id] = separateOverwrites(overwrite);
-
-        return id === (member ? member.id : role.id);
+        return overwrite.id === (member ? member.id : role.id);
     });
 
     if (overwriteCachedMember) {
-        const [_type, _id, allowBits, denyBits] = separateOverwrites(overwriteCachedMember);
+        let denyBits = getPermissionBits(overwriteCachedMember.deny);
+        let allowBits = getPermissionBits(overwriteCachedMember.allow);
 
         permissions &= ~denyBits;
         permissions |= allowBits;
@@ -89,12 +97,10 @@ export const calculateCachedChannelOverwrites = (guild, channel, member, role) =
     return permissions;
 }
 
-const Mask = (1n << 64n) - 1n;
+function getPermissionBits(permissions) {
+    if (typeof permissions === "bigint") {
+        return permissions;
+    }
 
-function separateOverwrites(v) {
-    return [Number(unpack64(v, 3)), unpack64(v, 2), unpack64(v, 0), unpack64(v, 1)];
-}
-
-function unpack64(v, shift) {
-    return (v >> BigInt(shift * 64)) & Mask
+    return BigInt(calculateBits(permissions));
 }

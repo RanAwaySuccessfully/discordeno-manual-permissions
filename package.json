@@ -6,5 +6,8 @@
   "main": "permissions.js",
   "private": false,
   "author": "RanAwaySuccessfully",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@discordeno/utils": ">=19.0.0"
+  }
 }

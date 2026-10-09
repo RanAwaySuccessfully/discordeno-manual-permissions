@@ -1,5 +1,5 @@
 # discordeno-manual-permissions
-Discordeno helper functions for dealing with permissions.
+Discordeno helper functions for dealing with permissions on Discordeno v19 or higher.
 
 Contains copy-pasted code from previous versions of Discordeno itself.
 
@@ -50,6 +50,7 @@ Review your bot's `desiredProperties` and check that it has at least these:
     },
     role: {
         id: true,
+        position: true,
         permissions: true,
     }
 }
@@ -81,16 +82,18 @@ The example above has `ChannelTypes` imported from Discordeno itself.
 
 You may simply provide the cached objects, as long as they contain the required fields (see `desiredProperties` above).
 
+The example below is using [dd-cache-proxy](https://github.com/AwesomeStickz/dd-cache-proxy).
+
 ```js
-guild = await bot.helpers.getGuild(guildId);
-member = await bot.helpers.getMember(guildId, userId);
-channel = await bot.helpers.getChannel(channelId);
-role = await bot.helpers.getRole(roleId);
+guild = await bot.cache.guilds.get(guildId);
+member = await bot.cache.members.get(guildId, userId);
+channel = await bot.cache.channels.get(channelId);
+role = await bot.cache.roles.get(roleId);
 ```
 
 For threads, you need to supply the parent channel instead:
 
 ```js
-thread = await bot.helpers.getChannel(channelId);
-channel = await bot.helpers.getChannel(thread.parentId);
+thread = await bot.cache.channels.get(channelId);
+channel = await bot.cache.channels.get(thread.parentId);
 ```
